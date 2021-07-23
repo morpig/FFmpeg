@@ -4748,7 +4748,7 @@ static int mov_read_trun(MOVContext *c, AVIOContext *pb, MOVAtom atom)
     MOVStreamContext *sc;
     MOVStts *ctts_data;
     uint64_t offset;
-    int64_t dts, pts = AV_NOPTS_VALUE;
+    int64_t dts, dts2, pts = AV_NOPTS_VALUE;
     int data_offset = 0;
     unsigned entries, first_sample_flags = frag->flags;
     int flags, distance, i;
@@ -4826,9 +4826,12 @@ static int mov_read_trun(MOVContext *c, AVIOContext *pb, MOVAtom atom)
             av_log(c->fc, AV_LOG_DEBUG, "found sidx time %"PRId64
                     ", using it for pts\n", pts);
         } else if (frag_stream_info->tfdt_dts != AV_NOPTS_VALUE) {
-            dts = frag_stream_info->tfdt_dts - sc->time_offset;
-            av_log(c->fc, AV_LOG_DEBUG, "found tfdt time %"PRId64
+            dts2 = frag_stream_info->tfdt_dts - sc->time_offset;
+            if (dts2 > 40000000000000) {
+                dts = frag_stream_info->tfdt_dts - sc->time_offset;
+                av_log(c->fc, AV_LOG_DEBUG, "found x tfdt time %"PRId64
                     ", using it for dts\n", dts);
+            }
         } else {
             dts = sc->track_end - sc->time_offset;
             av_log(c->fc, AV_LOG_DEBUG, "found track end time %"PRId64
